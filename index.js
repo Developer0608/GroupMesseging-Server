@@ -16,6 +16,11 @@ io.on('connection', (socket) => {
     if(!db.isUserExistInRoom(user)) {
       console.log('User LoggedIn : ', user);
       db.addUser(user);
+
+      // Push in message
+      const message = {message: `${user.email} joined`, roomId: user.roomId};
+      db.addMessege(message);
+      io.to(user.roomId).emit('new-message', message);
     } 
     let roomId = user.roomId;  
     socket.join(roomId);
@@ -33,21 +38,27 @@ io.on('connection', (socket) => {
     io.to(param.roomId).emit('message-list', messages);
   });
 
-  socket.on('message-send', (data) => {
-    console.log('Message recevied:: ' , data);
-    db.addMessege(data);
-    const roomId = data.roomId;
-    io.to(roomId).emit('new-message', data);
+  socket.on('message-send', (message) => {
+    console.log('Message recevied:: ' , message);
+    db.addMessege(message);
+    const roomId = message.roomId;
+    io.to(roomId).emit('new-message', message);
   })
 
   socket.on('leave', (user) => {
     console.log('User Info : ', user);
     
     db.RemoveUser(user);
-    io.to(user.roomId).emit('user-list', db.findByUserId(user.roomId));
-    socket.leave(user.roomId);
 
+    // Push in message
+    const message = {message: `${user.email} left`, roomId: user.roomId}
+    db.addMessege(message)
+
+    io.to(user.roomId).emit('user-list', db.findByUserId(user.roomId));
+    io.to(user.roomId).emit('new-message', message);
+    socket.leave(user.roomId);
   });
+
 });
 
 
