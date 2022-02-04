@@ -14,6 +14,7 @@ io.on('connection', (socket) => {
   console.log('Call from client');
   socket.on('join-room', (user) => {
     if(!db.isUserExistInRoom(user)) {
+      console.log('User LoggedIn : ', user);
       db.addUser(user);
     } 
     let roomId = user.roomId;  
@@ -39,15 +40,14 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('new-message', data);
   })
 
-  // socket.emit('connection', null);
+  socket.on('leave', (user) => {
+    console.log('User Info : ', user);
+    
+    db.RemoveUser(user);
+    io.to(user.roomId).emit('user-list', db.findByUserId(user.roomId));
+    socket.leave(user.roomId);
 
-  socket.on('leave', () => {
-    socket.leave(roomId);
   });
-
-  // socket.on('disconnect', () => {
-  //   console.log('User Disconnected.....')
-  // });
 });
 
 
